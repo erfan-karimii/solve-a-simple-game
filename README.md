@@ -1,0 +1,2 @@
+# solve a simple game
+ 
