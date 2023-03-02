@@ -1,12 +1,21 @@
 import random
 
-game_map = [['1','0','0','0'],['0','0','0','$'],['X','0','0','X'],['0','0','0','0']] 
+game_map = [['1','0','0','0'],['0','0','0','0'],['0','0','0','0'],['0','0','0','0']]
+# game_map = [['1','0','0','0'],['X','0','0','0'],['0','0','0','0'],['$','X','0','0']]
+# game_map = [['1','0','0','$'],['0','0','0','X'],['0','0','X','0'],['0','0','0','0']]
+
+# (game_map = [['1','0','0','$'],['0','0','0','X'],['0','0','X','0'],['0','0','0','0']]) sample that wrong_dir needed
+character_moves = []
+wrong_dir = {}
+for row in range(len(game_map)):
+    for element in range(len(game_map)):
+        wrong_dir.update({(row,element):[]})
+
 
 trap_1_row = 0
 trap_1_element = 0
 character_position = [0,0]
 is_random = False
-# flag = True
 
 
 def print_map(game_map,info=None):
@@ -77,10 +86,13 @@ def move_player():
 
         # change player index
         character_position[0] += 1
+        return 'down'
     
     # check player is not in right side of map and player right element is not Trap
     elif character_position[1] != 3 and game_map[character_position[0]][character_position[1] + 1] != 'X' and \
         game_map[character_position[0]][character_position[1] + 1] != 'S' :
+
+
 
         # make a mark of previous step
         game_map[character_position[0]][character_position[1]] = 'S'
@@ -90,10 +102,13 @@ def move_player():
 
         # change player index
         character_position[1] += 1
+        return 'right'
 
     # check player is not in up side of map and player up element is not Trap
     elif character_position[0] != 0 and game_map[character_position[0] - 1][character_position[1]] != 'X' and \
         game_map[character_position[0] - 1][character_position[1]] != 'S' :
+
+
         
         # make a mark of previous step
         game_map[character_position[0]][character_position[1]] = 'S'
@@ -103,9 +118,11 @@ def move_player():
 
         # change player index
         character_position[0] -= 1
+
+        return 'up'
     
     # check player is not in left side of map and player left element is not Trap
-    elif character_position[1] != 3 and game_map[character_position[0]][character_position[1] - 1] != 'X' and \
+    elif character_position[1] != 0 and game_map[character_position[0]][character_position[1] - 1] != 'X' and \
         game_map[character_position[0]][character_position[1] - 1] != 'S' :
 
         # make a mark of previous step
@@ -116,12 +133,51 @@ def move_player():
 
         # change player index
         character_position[1] -= 1
-         
+
+        return 'left'
+
+def move_player_back_until_find_new_path():
+    global character_moves
+    global character_position
+    
+    # make a mark of previous step
+    game_map[character_position[0]][character_position[1]] = 'S'
+    
+    # move player
+    game_map[character_moves[-1][0][0]][character_moves[-1][0][1]] = '1'
+    character_position = [character_moves[-1][0][0],character_moves[-1][0][1]]
+    character_moves.pop()
+    # print_map(game_map,f'map with traps & treasure & {x} move')
+    check_area()
+
+def check_area():
+    down = ''
+    if character_position[0] != 3:
+        down =  game_map[character_position[0] + 1][character_position[1]]
+
+    up = ''
+    if character_position[0] != 0:
+        up = game_map[character_position[0] - 1][character_position[1]]
+    
+
+    right = ''
+    if character_position[1] != 3:
+        right = game_map[character_position[0]][character_position[1] + 1]
+
+    left = ''
+    if character_position[1] != 0:
+        left =  game_map[character_position[0]][character_position[1] - 1]
+
+    if down == '0' or up == '0' or right == '0' or left == '0':
+        return ''
+    else :
+        move_player_back_until_find_new_path()  
+    
 def check_for_treasure():
     down = ''
     if character_position[0] != 3:
         down =  game_map[character_position[0] + 1][character_position[1]]
-    
+
     up = ''
     if character_position[0] != 0:
         up = game_map[character_position[0] - 1][character_position[1]]
@@ -129,7 +185,7 @@ def check_for_treasure():
     right = ''
     if character_position[1] != 3:
         right = game_map[character_position[0]][character_position[1] + 1]
-    
+
     left = ''
     if character_position[1] != 0:
         left =  game_map[character_position[0]][character_position[1] - 1]
@@ -158,20 +214,22 @@ if __name__ == '__main__':
     print_map(game_map,f'map with traps & treasure')
 
 x = 1
-while x < 17:
+while x < 20:
+    # check if player is win
     status = check_for_treasure()
-    
-
-    if status == 'win':
-        print('\n','-'*25,'win','-'*25)
+    if status == 'win' and __name__ == '__main__':
+        print('\n','-'*25,status,'-'*25)
         break
-    
-    previuos_place = character_position.copy()
-    move_player()
-    current_place = character_position
-    print(previuos_place,current_place)
-    
-    if __name__ == '__main__':
-        print_map(game_map,f'map with traps & treasure & {x} move')
-    x +=1
 
+    dir = move_player()
+
+
+    if dir is None and __name__== '__main__':
+        move_player_back_until_find_new_path()
+    else:
+        character_moves.append([tuple(character_position),dir])
+    print_map(game_map,f'map with traps & treasure & {x} move')
+    x +=1
+else:
+    status = 'fail'
+    print('\n','-'*25,status,'-'*25)
